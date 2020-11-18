@@ -1,0 +1,95 @@
+<html> 
+<head>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"> </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.min.js"></script>
+
+</head>
+
+<body>
+
+    <p>It works!<br>count=%d</p>
+    <p id="cpu">Current CPU Percent=<span id="cpuVal">%f</span></p>
+    <p>Max CPU Percent=<span id="maxVal">%f</span></p>
+    <p>Average CPU Percent=<span id="avgVal">%f</span></p>
+    <button id="auto">auto-update mode</button>
+    
+    <br> <br>
+
+    <span> CPU Usage threshold </span>
+    <input name="thVal" value=" "></input>
+    <button id="threshold">Alert</button>
+    <p id="vs"> </p>
+    <div id='outputGraph' style='height: 300, width: 50'></div>
+
+    <span id='output'><!-- comments --></span>
+    <script>
+var inputData = [];
+
+var G = Morris.Bar({
+element: 'outputGraph',
+  data: inputData,
+  xkey: 'time',
+  ykeys: ['value'],
+  labels: ['Value']
+});
+
+function requestT() {
+    $.getJSON("/data",
+        function (data, status) {        
+            threshold(data.up);
+        }
+    );  
+}
+
+function threshold(cpu) {
+    
+    $('#cpuVal').html(cpu);
+    var th=$("input[name='thVal']").val();
+    if (Number(cpu)>=Number(th)) {
+        $('#cpu').css('color', 'red');
+        window.alert("The cpu usage has exceeded the threshold");
+    }
+    else {
+        $('#cpu').css('color', 'black');
+    }
+
+}
+
+function dataChart(val) {
+
+       var today = new Date();
+       var timeNow = today.getFullYear() + '-0' + (today.getMonth()+1) + '-' + today.getDate() + " " + today.getHours() + ':' + today.getMinutes() + ':' + today.getSeconds();       
+       inputData.push({ time: timeNow , value: val });
+       G.setData( inputData );
+}
+
+function interval() {
+    setInterval(requestA, 1000);
+}
+
+
+function requestA() {
+    $.getJSON("/data",
+        function (data, status) {           
+            autoUpdate(data.up,data.max,data.avg);
+            dataChart(data.up);
+        }
+    );  
+}
+
+function autoUpdate(cpu,max,avg) {
+    $('#vs').html("CPU Usage Percent versus Time:");
+    $('#cpuVal').html(cpu);
+    $('#maxVal').html(max);
+    $('#avgVal').html(avg);    
+}
+$("input[name='thVal']").val("");
+$('#threshold').click(requestT);
+$('#auto').click(interval);
+    </script>
+
+</body>
+    
+</html>
