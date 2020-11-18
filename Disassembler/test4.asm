@@ -1,0 +1,15 @@
+.DATA
+.ADDR x4001
+
+.FILL x08
+
+.CODE
+.ADDR x0005
+second
+ADD R6, R6, R7
+
+.CODE
+.ADDR x0010
+ADD R6, R2, #-3
+third
+ADD R5, R6, x08
